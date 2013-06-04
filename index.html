@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="ML Language : Tiny Lazy ML with Process Calculus in plain C" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>ML Language</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/synrc/ml_language">View on GitHub</a>
+
+          <h1 id="project_title">ML Language</h1>
+          <h2 id="project_tagline">Tiny Lazy ML with Process Calculus in plain C</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/synrc/ml_language/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/synrc/ml_language/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="lml-with-ccs" class="anchor" href="#lml-with-ccs"><span class="octicon octicon-link"></span></a>LML with CCS</h1>
+
+<p>Lazy ML with Calculus of Communicating Systems (introduced by Robin Milner).
+Язык который предназначен для образовательных целей, что бы можно было
+"на пальцах" показать, как создать функциальный язык основанный на λ-исчислении.
+Для перчинки в язык инкапсулированы ленивость и исчисление процессов,
+предложенное Робином Милнером.</p>
+
+<h2>
+<a name="--" class="anchor" href="#--"><span class="octicon octicon-link"></span></a>Операции виртуальной машины</h2>
+
+<p>Сериализованное дерево исполняемой программы представляет
+собой дерево хранящееся в последовательности операторов виртуальной машины.
+Оно может быть полностью декомпилировано в исходный код программы.</p>
+
+<pre><code>quote
+lambda
+application
+block
+expression
+decln
+declist
+ifexp
+matchexp
+</code></pre>
+
+<h2>
+<a name="---1" class="anchor" href="#---1"><span class="octicon octicon-link"></span></a>Среда виртуальной машины</h2>
+
+<p>Среда именованых значений представляет собой список именованых значений.
+Само значение представляет собой...</p>
+
+<pre><code>proc     | , ||
+ioproc   c ? x -&gt; ..., c ! e -&gt; ...
+value    .
+list
+func
+</code></pre>
+
+<h2>
+<a name="-" class="anchor" href="#-"><span class="octicon octicon-link"></span></a>Контекст исполнения</h2>
+
+<pre><code>struct exec_ctx {
+    int evals, envcells, conscells; // statistics 
+    alfa LastId;                 { debugging}
+    int64 processvalues;
+    int ChannelCntr;
+    vaue Processes, OutputChan, OutputProc, InputChan, InputProc;
+    tree OutputMsg, InputMsg, OutputCont, InputCont;
+    env SysEnv;
+    int n;
+} exec_ctx;
+</code></pre>
+
+<h2>
+<a name="--1" class="anchor" href="#--1"><span class="octicon octicon-link"></span></a>Выражения языка</h2>
+
+<p>При описании базовой структуры ML подязыка использовался минималистичный набор выражений,
+необходимый для демонстрации исчисления процессов. Поэтому в языке не реализованый такие
+возможности как pattern matching и система типов.</p>
+
+<p>Таким образом, базовая часть лямбда исчисления представляет собой только фунциональные
+определения и выражение, так называемый let rec.</p>
+
+<pre><code>program ::= exp
+exp ::= ident | numeral | 'letter' | () | true | false | nil |
+    ( exp ) | unopr exp | exp binopr exp |
+    if exp then exp else exp |
+    lambda param . exp  |  exp exp |
+    let [rec] decs in exp
+decs  ::= dec , decs | dec
+dec   ::= ident = exp
+param ::= () | ident
+unopr ::= head | tail | null | not | -
+binopr ::= and | or | = | &lt;&gt; | &lt; | &lt;= | &gt; | &gt;= | + | - | * | / | ::
+priorities:
+    ::                   1 cons list (right associative)
+    or                   2
+    and                  3
+    = &lt;&gt; &lt; &lt;= &gt; &gt;=       4 scalars only
+    + -                  5 { binary - }
+    * /                  6
+    application          7 { left associative, f x y = (f(x))(y) }
+    - head tail null not 8 { unary - }
+</code></pre>
+
+<p>Часть языка, котая отвечает за исчисление процессов моделирует</p>
+
+<pre><code>processes:
+    process1 || process2       p1 and p2 in parallel
+    process1 |  process2       choice of either p1 or p2
+    action -&gt; process          sequence
+    stop                       null process
+</code></pre>
+
+<p>Существует известное ограничивающее правило находжения оператора || ниже
+оператора | Например выражение (p1||p2)|p3 является недопустимым.</p>
+
+<pre><code>actions:
+    channel ? variable         input  action
+    channel ! expression       output action
+
+channels:
+    let c=chan in ...          chan returns a new channel
+    output                     standard ouput channel
+    input                      standard input channel
+</code></pre>
+
+<p>Максим Сохацкий (<a href="mailto:maxim@synrc.com">maxim@synrc.com</a>)</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">ML Language maintained by <a href="https://github.com/synrc">synrc</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
